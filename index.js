@@ -1,28 +1,29 @@
-const http = require('http');
-const axios = require('axios');
+import express from 'express';
+import axios from 'axios';
+
+const app = express();
+app.use(express.json());
 
 const targetUrl = 'https://hiveonboard.com/api/tickets';
 
-const server = http.createServer((req, res) => {
-  let body = '';
+app.post('/forward-requests', (req, res) => {
+  const { accessToken } = req.body;
 
-  req.on('data', chunk => {
-    body += chunk.toString();
-  });
+  if (!accessToken) {
+    return res.status(400).send('Access token is required');
+  }
 
-  req.on('end', () => {
-    const { accessToken } = JSON.parse(body);
+  const requests = Array.from({ length: 20 }).map(() =>
+    axios.post(targetUrl, { accessToken })
+      .catch(() => {}) 
+  );
 
-    const requests = Array.from({ length: 20 }).map(() => 
-      axios.post(targetUrl, { accessToken })
-    );
+  Promise.all(requests);
 
-    Promise.all(requests)
-      .catch(() => {});
-
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Requests sent to target API.');
-  });
+  res.status(200).send('Requests sent to target API');
 });
 
-server.listen(3000);
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Final server listening on port ${port}`);
+});
