@@ -1,5 +1,5 @@
-import http from 'http';
-import axios from 'axios';
+const http = require('http');
+const axios = require('axios');
 
 const targetUrl = 'https://hiveonboard.com/api/tickets';
 
